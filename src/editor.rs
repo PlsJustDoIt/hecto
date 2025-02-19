@@ -1,5 +1,5 @@
 
-use crate::terminal::Terminal; // If you want to use Terminal directly
+use crate::terminal::{Terminal,Position}; // If you want to use Terminal directly
 use crossterm::event::{read, Event, Event::Key, KeyCode::Char, KeyEvent, KeyModifiers};
 
 
@@ -20,12 +20,13 @@ impl Editor {
 
     fn repl(&mut self) -> Result<(), std::io::Error> {
         loop {
-            let event = read()?;
-            self.evaluate_event(&event);
             self.refresh_screen()?;
             if self.should_quit {
                 break;
             }
+            let event = read()?;
+            self.evaluate_event(&event);
+            
         }   
         Ok(())
     }
@@ -38,32 +39,39 @@ impl Editor {
             match code {
                 Char('q') if *modifiers == KeyModifiers::CONTROL => {
                     self.should_quit = true;
-                }
+                },
+
+                Char('a') => Terminal::print("le perou est en danger").unwrap(),
                 
                 _ => (),
             }
+
         }
     }
     fn refresh_screen(&self) -> Result<(), std::io::Error> {
+        Terminal::hide_cursor()?;
         if self.should_quit {
-            Terminal::clear_screen()?;
-            print!("Goodbye.\r\n");
+                    Terminal::clear_screen()?;
+                    Terminal::print("Goodbye.\r\n")?;
         } else {
             Self::draw_rows()?;
-            Terminal::move_cursor_to(0, 0)?;
+            Terminal::move_cursor_to(Position{x:0, y:0})?;
         }
+        Terminal::show_cursor()?;
+        Terminal::execute()?;
+
         Ok(())
     }
 
     fn draw_rows() -> Result<(), std::io::Error> {
         
-        let  rows = Terminal::size()?.1;
+        let  rows = Terminal::size()?.height;
         for n in 0..rows {
             // Terminal::move_cursor_to(0,n).unwrap(); // ma tech à la base
-            
-            print!("~");
+            Terminal::clear_line()?;
+            Terminal::print("~")?;
             if n + 1 < rows {
-                print!("\r\n");
+                Terminal::print("\r\n")?;
             }
         }
         Ok(())
