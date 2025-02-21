@@ -1,12 +1,13 @@
 
 use crate::terminal::{Terminal,Position,Size}; // If you want to use Terminal directly
+use crate::view::View;
 use crossterm::event::{read, Event, Event::Key, KeyEventKind::Press, KeyCode, KeyEvent, KeyModifiers};
+use std::env;
 use std::io::Error;
 use core::cmp::min;
 
 
-const NAME: &str = env!("CARGO_PKG_NAME");
-const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 
 #[derive(Copy, Clone, Default)]
 struct Location {
@@ -18,12 +19,18 @@ struct Location {
 #[derive(Default)]
 pub struct Editor {
     should_quit:bool,
-    location:Location
+    location:Location,
+    view:View
 }
 
 impl Editor {
     pub fn run(&mut self) {
         Terminal::initialize().unwrap();
+
+        let args: Vec<String> = env::args().collect();
+        if let Some(file_name) = args.get(1) {
+            self.view.load(file_name);
+        }
         // Terminal::p
         let result = self.repl();
         Terminal::terminate().unwrap();
@@ -122,7 +129,7 @@ impl Editor {
             Terminal::clear_screen()?;
             Terminal::print("Goodbye.\r\n")?;
         } else {
-            Self::draw_rows()?;
+            self.view.render()?;
             Terminal::move_cursor_to(Position {
                 x: self.location.x,
                 y: self.location.y,
@@ -135,39 +142,6 @@ impl Editor {
         Ok(())
     }
 
-    fn draw_welcome_message() -> Result<(), Error> {
-        let mut welcome_message = format!("{NAME} editor -- version {VERSION}");
-        let width = Terminal::size()?.width as usize;
-        let len = welcome_message.len();
-        let padding = (width - len) / 2;
-        let spaces = " ".repeat(padding - 1);
-        welcome_message = format!("~{spaces}{welcome_message}");
-        welcome_message.truncate(width);
-        Terminal::print(&welcome_message)?;
-        Ok(())
-    }
-    fn draw_empty_row() -> Result<(), Error> {
-        Terminal::print("~")?;
-        Ok(())
-    }
-
-    fn draw_rows() -> Result<(), Error> {
-        
-        let  rows = Terminal::size()?.height;
-        for n in 0..rows {
-            // Terminal::move_cursor_to(0,n).unwrap(); // ma tech à la base
-            Terminal::clear_line()?;
-            if n == rows / 3 {
-                Self::draw_welcome_message()?;
-            } else {
-                Self::draw_empty_row()?;
-            }
-            if n + 1 < rows {
-                Terminal::print("\r\n")?;
-            }
-        }
-        Ok(())
-
-    }
+    
 
 }

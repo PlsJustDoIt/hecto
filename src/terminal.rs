@@ -79,9 +79,9 @@ impl Terminal {
     pub fn print(message: &str) -> Result<(), Error> {
         Self::queue_command(Print(message))?;
         Ok(())
-     }
+    }
 
-     pub fn execute() -> Result<(), Error> {
+    pub fn execute() -> Result<(), Error> {
         stdout().flush()?;
         Ok(())
     }
@@ -92,5 +92,4 @@ impl Terminal {
     }
 
 
-   
 }
