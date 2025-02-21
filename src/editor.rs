@@ -1,61 +1,133 @@
 
-use crate::terminal::{Terminal,Position}; // If you want to use Terminal directly
-use crossterm::event::{read, Event, Event::Key, KeyCode::Char, KeyEvent, KeyModifiers};
+use crate::terminal::{Terminal,Position,Size}; // If you want to use Terminal directly
+use crossterm::event::{read, Event, Event::Key, KeyEventKind::Press, KeyCode, KeyEvent, KeyModifiers};
+use std::io::Error;
+use core::cmp::min;
 
 
+const NAME: &str = env!("CARGO_PKG_NAME");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+#[derive(Copy, Clone, Default)]
+struct Location {
+    x: usize,
+    y: usize,
+}
+
+
+#[derive(Default)]
 pub struct Editor {
     should_quit:bool,
+    location:Location
 }
 
 impl Editor {
-    pub const fn default() -> Self {            
-        Self { should_quit: false }            
-    }
     pub fn run(&mut self) {
         Terminal::initialize().unwrap();
+        // Terminal::p
         let result = self.repl();
         Terminal::terminate().unwrap();
         result.unwrap();
     }
 
-    fn repl(&mut self) -> Result<(), std::io::Error> {
+    fn move_point(&mut self, key_code:KeyCode) -> Result<(),Error> {
+        let Location{mut x, mut y} = self.location;
+        let Size { height, width } = Terminal::size()?;
+        match key_code {
+            KeyCode::Up => {
+                y = y.saturating_sub(1);
+            },
+            KeyCode::Down => {
+                y = min(height.saturating_sub(1), y.saturating_add(1));
+            },
+            KeyCode::Left => {
+                x = x.saturating_sub(1);
+            },
+
+            KeyCode::Right => {
+                x = min(width.saturating_sub(1), x.saturating_add(1));
+            },
+
+            KeyCode::PageUp => {
+                y = 0;
+            }
+            KeyCode::PageDown => {
+                y = height.saturating_sub(1);
+            }
+            KeyCode::Home => {
+                x = 0;
+            }
+            KeyCode::End => {
+                x = width.saturating_sub(1);
+            },
+
+            _ => (),
+        }
+
+        self.location = Location { x, y };
+        Ok(())
+    }
+
+    fn repl(&mut self) -> Result<(), Error> {
         loop {
             self.refresh_screen()?;
             if self.should_quit {
                 break;
             }
             let event = read()?;
-            self.evaluate_event(&event);
+            self.evaluate_event(&event)?;
             
         }   
         Ok(())
     }
 
-    fn evaluate_event(&mut self, event: &Event) {
+    fn evaluate_event(&mut self, event: &Event) -> Result<(), Error> {
         if let Key(KeyEvent {
-            code, modifiers, ..
+            code, modifiers,  kind: Press, ..
         }) = event
         {
             match code {
-                Char('q') if *modifiers == KeyModifiers::CONTROL => {
+
+                KeyCode::Up
+                | KeyCode::Down
+                | KeyCode::Left
+                | KeyCode::Right
+                | KeyCode::PageDown
+                | KeyCode::PageUp
+                | KeyCode::End
+                | KeyCode::Home => {
+                    self.move_point(*code)?;
+                }
+                KeyCode::Char('q') if *modifiers == KeyModifiers::CONTROL => {
                     self.should_quit = true;
                 },
 
-                Char('a') => Terminal::print("le perou est en danger").unwrap(),
+                KeyCode::Char('a') => Terminal::print("le perou est en danger").unwrap(),
                 
                 _ => (),
             }
+            
 
         }
+        Ok(())
     }
-    fn refresh_screen(&self) -> Result<(), std::io::Error> {
+
+    
+
+    
+    fn refresh_screen(&self) -> Result<(), Error> {
         Terminal::hide_cursor()?;
+        Terminal::move_cursor_to(Position::default())?;
         if self.should_quit {
-                    Terminal::clear_screen()?;
-                    Terminal::print("Goodbye.\r\n")?;
+            Terminal::clear_screen()?;
+            Terminal::print("Goodbye.\r\n")?;
         } else {
             Self::draw_rows()?;
-            Terminal::move_cursor_to(Position{x:0, y:0})?;
+            Terminal::move_cursor_to(Position {
+                x: self.location.x,
+                y: self.location.y,
+            })?;
+            
         }
         Terminal::show_cursor()?;
         Terminal::execute()?;
@@ -63,13 +135,33 @@ impl Editor {
         Ok(())
     }
 
-    fn draw_rows() -> Result<(), std::io::Error> {
+    fn draw_welcome_message() -> Result<(), Error> {
+        let mut welcome_message = format!("{NAME} editor -- version {VERSION}");
+        let width = Terminal::size()?.width as usize;
+        let len = welcome_message.len();
+        let padding = (width - len) / 2;
+        let spaces = " ".repeat(padding - 1);
+        welcome_message = format!("~{spaces}{welcome_message}");
+        welcome_message.truncate(width);
+        Terminal::print(&welcome_message)?;
+        Ok(())
+    }
+    fn draw_empty_row() -> Result<(), Error> {
+        Terminal::print("~")?;
+        Ok(())
+    }
+
+    fn draw_rows() -> Result<(), Error> {
         
         let  rows = Terminal::size()?.height;
         for n in 0..rows {
             // Terminal::move_cursor_to(0,n).unwrap(); // ma tech à la base
             Terminal::clear_line()?;
-            Terminal::print("~")?;
+            if n == rows / 3 {
+                Self::draw_welcome_message()?;
+            } else {
+                Self::draw_empty_row()?;
+            }
             if n + 1 < rows {
                 Terminal::print("\r\n")?;
             }
