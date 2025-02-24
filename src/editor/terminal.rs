@@ -11,7 +11,14 @@ use std::io::Error;
 
 
 
-
+impl Position {
+    pub const fn saturating_sub(self, other: Self) -> Self {
+        Self {
+            x: self.x.saturating_sub(other.x),
+            y: self.y.saturating_sub(other.y),
+        }
+    }
+}
 
 
 #[derive(Default,Copy, Clone)]

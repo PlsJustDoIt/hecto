@@ -21,5 +21,9 @@ impl  Buffer {
         return self.lines.is_empty()
     }
 
+    pub fn height(&self) -> usize {
+        self.lines.len()
+    }
+
     // add_str()
 }
