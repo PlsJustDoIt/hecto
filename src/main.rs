@@ -7,28 +7,23 @@
     clippy::integer_division
 )]
 mod editor;
-mod terminal;
-mod view;
-mod buffer;
 use editor::Editor;
+use std::path::Path;
 
 
 
 fn main() {
 
-    // let args: Vec<String> = std::env::args().collect();
-    // if args.len()>2 {
-    //     println!("wrong args\n");
-    //     return;
-    // }
-    // if let Some(first_arg) = args.get(1) {
-    //     let file_contents = std::fs::read_to_string(first_arg).unwrap();
-    //     for line in file_contents.lines() {
-    //         // Do something with the line
-
-    //    }
-    // } else {
-    //    println!("No arg given");
-    // }
+    let args: Vec<String> = std::env::args().collect();
+    if args.len()>2 {
+        println!("wrong args\n");
+        return;
+    }
+    let filename = args.get(1).unwrap();
+    let file = Path::new(filename);
+    if !file.exists() || !file.is_file() {
+        println!("the path given is not a valid file.\n");
+        return;
+    }
     Editor::new().unwrap().run();
 }
