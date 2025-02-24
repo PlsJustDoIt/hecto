@@ -17,6 +17,7 @@ pub enum EditorCommand {
     Move(Direction),
     Resize(Size),
     Quit,
+    Print(String)
 }
 
 impl TryFrom<Event> for EditorCommand {
@@ -26,6 +27,10 @@ impl TryFrom<Event> for EditorCommand {
             Event::Key(KeyEvent {
                 code, modifiers, ..
             }) => match (code, modifiers) {
+                (KeyCode::Char('a'), _) => {
+                    let str = format!("rust c'est casse couille \n");
+                    Ok(Self::Print(str))
+                },
                 (KeyCode::Char('q'), KeyModifiers::CONTROL) => Ok(Self::Quit),
                 (KeyCode::Up, _) => Ok(Self::Move(Direction::Up)),
                 (KeyCode::Down, _) => Ok(Self::Move(Direction::Down)),

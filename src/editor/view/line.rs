@@ -1,5 +1,4 @@
 use std::{cmp, ops::Range};
-
 // en gros type pour une ligne
 
 pub struct Line {
@@ -12,6 +11,10 @@ impl Line {
             string: String::from(line_str),
         }
     }
+
+    pub fn len(&self) -> usize {
+        self.string.len()
+}
     pub fn get(&self, range: Range<usize>) -> String {
         let start = range.start;
         let end = cmp::min(range.end, self.string.len());
