@@ -19,11 +19,14 @@ fn main() {
         println!("wrong args\n");
         return;
     }
-    let filename = args.get(1).unwrap();
-    let file = Path::new(filename);
-    if !file.exists() || !file.is_file() {
-        println!("the path given is not a valid file.\n");
+    if args.len()==2 {
+        let filename = args.get(1).unwrap();
+        let file = Path::new(filename);
+        if !file.exists() || !file.is_file() {
+            println!("the path given is not a valid file.\n");
         return;
+        }
     }
+    
     Editor::new().unwrap().run();
 }
