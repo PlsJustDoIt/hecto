@@ -103,7 +103,13 @@ impl View {
             EditorCommand::Resize(size) => self.resize(size),
             EditorCommand::Move(direction) => self.move_text_location(&direction),
             EditorCommand::Print(message) => Terminal::print(message.as_str()).unwrap(),
-            EditorCommand::Quit => {}
+            EditorCommand::Quit => {},
+            EditorCommand::Nothing => {},
+            EditorCommand::PrintChar(char) => {
+                Terminal::print(char.to_string().as_str()).unwrap();
+                Self::move_right(self);
+            }
+
         }
     }
 

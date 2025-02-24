@@ -17,7 +17,10 @@ pub enum EditorCommand {
     Move(Direction),
     Resize(Size),
     Quit,
-    Print(String)
+    Print(String),
+    PrintChar(char),
+    Nothing
+
 }
 
 impl TryFrom<Event> for EditorCommand {
@@ -40,7 +43,8 @@ impl TryFrom<Event> for EditorCommand {
                 (KeyCode::PageUp, _) => Ok(Self::Move(Direction::PageUp)),
                 (KeyCode::Home, _) => Ok(Self::Move(Direction::Home)),
                 (KeyCode::End, _) => Ok(Self::Move(Direction::End)),
-                _ => Err(format!("Key Code not supported: {code:?}")),
+                (KeyCode::Char(char),_) => Ok(Self::PrintChar(char)),
+                _ => Ok(Self::Nothing),
             },
             Event::Resize(width_u16, height_u16) => {
                 // clippy::as_conversions: Will run into problems for rare edge case systems where usize < u16
