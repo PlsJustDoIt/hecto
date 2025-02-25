@@ -9,7 +9,6 @@
 mod editor;
 use editor::Editor;
 use std::path::Path;
-use unicode_segmentation::UnicodeSegmentation;
 
 
 

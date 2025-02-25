@@ -3,6 +3,7 @@ use std::convert::TryFrom;
 
 use super::terminal::Size;
 
+#[derive(Clone, Copy)]
 pub enum Direction {
     PageUp,
     PageDown,
@@ -13,13 +14,18 @@ pub enum Direction {
     Right,
     Down,
 }
+#[derive(Clone, Copy)]
 pub enum EditorCommand {
     Move(Direction),
     Resize(Size),
     Quit,
-    Print(String),
     PrintChar(char),
-    Nothing
+    Nothing,
+    Delete,
+    Backspace,
+    Tab,
+    Enter,
+    Save,
 
 }
 
@@ -30,10 +36,6 @@ impl TryFrom<Event> for EditorCommand {
             Event::Key(KeyEvent {
                 code, modifiers, ..
             }) => match (code, modifiers) {
-                (KeyCode::Char('a'), _) => {
-                    let str = format!("rust c'est casse couille \n");
-                    Ok(Self::Print(str))
-                },
                 (KeyCode::Char('q'), KeyModifiers::CONTROL) => Ok(Self::Quit),
                 (KeyCode::Up, _) => Ok(Self::Move(Direction::Up)),
                 (KeyCode::Down, _) => Ok(Self::Move(Direction::Down)),
@@ -43,8 +45,16 @@ impl TryFrom<Event> for EditorCommand {
                 (KeyCode::PageUp, _) => Ok(Self::Move(Direction::PageUp)),
                 (KeyCode::Home, _) => Ok(Self::Move(Direction::Home)),
                 (KeyCode::End, _) => Ok(Self::Move(Direction::End)),
-                (KeyCode::Char(char),_) => Ok(Self::PrintChar(char)),
+                (KeyCode::Backspace, _) => Ok(Self::Backspace),
+                (KeyCode::Delete, _) => Ok(Self::Delete),
+                (KeyCode::Tab,_) => Ok(Self::Tab),
+                (KeyCode::Enter,_) => Ok(Self::Enter),
+                (KeyCode::Char(char),  KeyModifiers::NONE | KeyModifiers::SHIFT) => Ok(Self::PrintChar(char)),
+                (KeyCode::Char('s'),KeyModifiers::CONTROL) => {
+                    Ok(Self::Save)
+                },
                 _ => Ok(Self::Nothing),
+                
             },
             Event::Resize(width_u16, height_u16) => {
                 // clippy::as_conversions: Will run into problems for rare edge case systems where usize < u16
