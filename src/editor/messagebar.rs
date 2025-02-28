@@ -39,9 +39,9 @@ pub struct MessageBar {
 }
 
 impl MessageBar {
-    pub fn update_message(&mut self, new_message: String) {
+    pub fn update_message(&mut self, new_message: &str) {
         self.current_message = Message {
-            text: new_message,
+            text: new_message.to_string(),
             time: Instant::now(),
         };
         self.cleared_after_expiry = false;
@@ -58,7 +58,7 @@ impl UIComponent for MessageBar {
     fn needs_redraw(&self) -> bool {
         (!self.cleared_after_expiry && self.current_message.is_expired()) || self.needs_redraw
     }
-    
+
     fn set_size(&mut self, _: Size) {}
     fn draw(&mut self, origin: usize) -> Result<(), Error> {
         if self.current_message.is_expired() {

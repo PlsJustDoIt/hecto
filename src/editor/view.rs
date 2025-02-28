@@ -3,7 +3,7 @@ mod buffer;
 use buffer::Buffer;
 use line::Line;
 use super::{
-    editorcommand::{Direction, EditorCommand},
+    command::{Edit, Move},
     terminal::{Position, Size, Terminal},
     DocumentStatus, NAME, VERSION,
     UIComponent,
@@ -54,21 +54,30 @@ impl View {
         Terminal::print_row(at, line_text)
     }
 
-    pub fn handle_command(&mut self, command: EditorCommand) {
+    pub fn handle_edit_command(&mut self, command: Edit) {
         match command {
-            EditorCommand::Resize(_) | EditorCommand::Quit => {}
-            EditorCommand::Move(direction) => self.move_text_location(direction),
-            //EditorCommand::Print(message) => Terminal::print(message.as_str()).unwrap(),
-            EditorCommand::Nothing => {},
-            EditorCommand::PrintChar(char) => self.insert_char(char),
-            EditorCommand::Delete => self.delete(),
-            EditorCommand::Backspace => self.backspace(),
-            EditorCommand::Tab => self.insert_char('\t'),
-            EditorCommand::Enter => self.insert_newline(),
-            EditorCommand::Save => self.save(),
-
-
+            Edit::Insert(character) => self.insert_char(character),
+            Edit::Delete => self.delete(),
+            Edit::DeleteBackward => self.delete_backward(),
+            Edit::InsertNewline => self.insert_newline(),
         }
+    }
+
+    pub fn handle_move_command(&mut self, command: Move) {
+        let Size { height, .. } = self.size;
+        // This match moves the positon, but does not check for all boundaries.
+        // The final boundarline checking happens after the match statement.
+        match command {
+            Move::Up => self.move_up(1),
+            Move::Down => self.move_down(1),
+            Move::Left => self.move_left(),
+            Move::Right => self.move_right(),
+            Move::PageUp => self.move_up(height.saturating_sub(1)),
+            Move::PageDown => self.move_down(height.saturating_sub(1)),
+            Move::StartOfLine => self.move_to_start_of_line(),
+            Move::EndOfLine => self.move_to_end_of_line(),
+        }
+        self.scroll_text_location_into_view();
     }
 
     pub fn get_status(&self) -> DocumentStatus {
@@ -80,19 +89,26 @@ impl View {
         }
     }
 
-    fn save(&mut self) {
-        let _ = self.buffer.save();
+    fn delete_backward(&mut self) {
+        if self.text_location.line_index != 0 || self.text_location.grapheme_index != 0 {
+            self.handle_move_command(Move::Left);
+            self.delete();
+        }
+    }
+
+    pub fn save(&mut self) -> Result<(), Error> {
+        self.buffer.save()
     }
 
     fn insert_newline(&mut self) {
         self.buffer.insert_newline(self.text_location);
-        self.move_text_location(Direction::Right);
+        self.handle_move_command(Move::Right);
         self.set_needs_redraw(true);
     }
 
     fn backspace(&mut self) {
         if self.text_location.line_index != 0 || self.text_location.grapheme_index != 0 {
-            self.move_text_location(Direction::Left);
+            self.handle_move_command(Move::Left);
             self.delete();
         }
     }
@@ -116,16 +132,16 @@ impl View {
             .map_or(0, Line::grapheme_count);
         let grapheme_delta = new_len.saturating_sub(old_len);
         if grapheme_delta > 0 {
-            self.move_text_location(Direction::Right);
+            self.handle_move_command(Move::Right);
         }
         self.set_needs_redraw(true);
     }
 
-    pub fn load(&mut self, file_name: &str) {
-        if let Ok(buffer) = Buffer::load(file_name) {
-            self.buffer = buffer;
-            self.set_needs_redraw(true);
-        }
+    pub fn load(&mut self, file_name: &str) -> Result<(), Error> {
+        let buffer = Buffer::load(file_name)?;
+        self.buffer = buffer;
+        self.set_needs_redraw(true);
+        Ok(())
     }
 
     fn scroll_vertically(&mut self, to: usize) {
@@ -185,22 +201,6 @@ impl View {
 
     // region: text location movement
 
-    fn move_text_location(&mut self, direction: Direction) {
-        let Size { height, .. } = self.size;
-        // This match moves the positon, but does not check for all boundaries.
-        // The final boundarline checking happens after the match statement.
-        match direction {
-            Direction::Up => self.move_up(1),
-            Direction::Down => self.move_down(1),
-            Direction::Left => self.move_left(),
-            Direction::Right => self.move_right(),
-            Direction::PageUp => self.move_up(height.saturating_sub(1)),
-            Direction::PageDown => self.move_down(height.saturating_sub(1)),
-            Direction::Home => self.move_to_start_of_line(),
-            Direction::End => self.move_to_end_of_line(),
-        }
-        self.scroll_text_location_into_view();
-    }
     fn move_up(&mut self, step: usize) {
         self.text_location.line_index = self.text_location.line_index.saturating_sub(step);
         self.snap_to_valid_grapheme();
