@@ -124,6 +124,10 @@ impl Editor {
                 Err(err) => {
                     panic!("Could not read event: {err:?}");
                 }
+                #[cfg(not(debug_assertions))]
+                Err(err) => {
+                    eprintln!("Could not read event: {err:?}");
+                }
             }
 
             let status = self.view.get_status();
