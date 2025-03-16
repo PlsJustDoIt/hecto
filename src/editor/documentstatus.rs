@@ -1,4 +1,5 @@
 
+/// Indique le status du document en train d'être édité
 #[derive(Default, Eq, PartialEq, Debug)]
 pub struct DocumentStatus {
     pub total_lines: usize,
@@ -8,6 +9,7 @@ pub struct DocumentStatus {
 }
 
 impl DocumentStatus {
+    /// status modifié ajouté lorsque le doc est modifié
     pub fn modified_indicator_to_string(&self) -> String {
         if self.is_modified {
             String::from("(modified)")

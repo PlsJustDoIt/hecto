@@ -3,12 +3,14 @@ use std::{
     path::PathBuf,
 };
 
+/// structure pour avoir des informations par rapport à un fichier
 #[derive(Default, Debug, Clone)]
 pub struct FileInfo {
     pub path: Option<PathBuf>,
 }
 
 impl FileInfo {
+    /// permet de créer une instance de FileInfo à partir d'un nom de fichier
     pub fn from(file_name: &str) -> Self {
         Self {
             path: Some(PathBuf::from(file_name)),
@@ -16,6 +18,7 @@ impl FileInfo {
     }
 }
 
+/// permet d'afficher le nom du fichier
 impl Display for FileInfo {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = self

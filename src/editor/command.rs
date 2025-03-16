@@ -9,6 +9,8 @@ use std::convert::TryFrom;
 
 use super::terminal::Size;
 
+/// déplacements possible pour le curseur
+
 #[derive(Clone, Copy)]
 pub enum Move {
     PageUp,
@@ -46,6 +48,9 @@ impl TryFrom<KeyEvent> for Move {
         }
     }
 }
+
+/// edition possible dans le terminal
+
 #[derive(Clone, Copy)]
 pub enum Edit {
     Insert(char),
@@ -72,6 +77,8 @@ impl TryFrom<KeyEvent> for Edit {
         }
     }
 }
+
+/// actions systèmes
 
 #[derive(Clone, Copy)]
 pub enum System {
@@ -100,6 +107,8 @@ impl TryFrom<KeyEvent> for System {
         }
     }
 }
+
+/// commandes pour l'utilisateur
 
 #[derive(Clone, Copy)]
 pub enum Command {

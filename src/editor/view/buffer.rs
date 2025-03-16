@@ -10,12 +10,13 @@ use crate::editor::fileinfo::FileInfo;
 #[derive(Default)]
 pub struct Buffer {
     pub lines: Vec<Line>,
-    pub dirty: bool,
+    pub dirty: bool, // en gros pour savoir si on a save ou pas
     pub file_info: FileInfo,
 }
 
 impl  Buffer {
 
+    /// permet de charger le texte d'un fichier dans le buffer
     pub fn load(file_name: &str) -> Result<Self, Error> {
         let contents = read_to_string(file_name)?;
         let mut lines = Vec::new();
@@ -25,10 +26,12 @@ impl  Buffer {
         Ok(Self { lines, file_info: FileInfo::from(file_name),dirty: false, })
     }
 
+    /// permet de savoir si le buffer est vide
     pub fn is_empty(&self) -> bool {
         return self.lines.is_empty()
     }
 
+    /// permet de sauvegarder le texte écrit dans le terminal dans un fichier
     pub fn save(&mut self) -> Result<(), Error> {
         if let Some(path) = &self.file_info.path {
             let mut file = File::create(path)?;
@@ -40,10 +43,13 @@ impl  Buffer {
         Ok(())
     }
 
+    /// retourne le nb de lignes
     pub fn height(&self) -> usize {
         self.lines.len()
     }
 
+
+    /// permet d'insérer un charactère au niveau du curseur
     pub fn insert_char(&mut self, character: char, at: Location) {
         if at.line_index > self.height() {
             return;
@@ -57,6 +63,7 @@ impl  Buffer {
         }
     }
 
+    /// permet d'insérer une ligne
     pub fn insert_newline(&mut self, at: Location) {
         if at.line_index == self.height() {
             self.lines.push(Line::default());
@@ -68,6 +75,7 @@ impl  Buffer {
         }
     }
 
+    /// permet de supprimer un charactère
     pub fn delete(&mut self, at: Location) {
         if let Some(line) = self.lines.get(at.line_index) {
             if at.grapheme_index >= line.grapheme_count()
@@ -87,5 +95,4 @@ impl  Buffer {
         }
     }
 
-    // add_str()
 }

@@ -6,6 +6,7 @@ use super::{
 };
 use std::io::Error;
 
+/// Status bar component
 #[derive(Default)]
 pub struct StatusBar {
     current_status: DocumentStatus,
@@ -17,7 +18,7 @@ pub struct StatusBar {
 
 impl StatusBar {
 
-    
+    /// Met à jour le status
     pub fn update_status(&mut self, new_status: DocumentStatus) {
         if new_status != self.current_status {
             self.current_status = new_status;

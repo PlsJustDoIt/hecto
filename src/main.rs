@@ -10,9 +10,6 @@ mod editor;
 use editor::Editor;
 use std::path::Path;
 
-
-
-
 fn main() {
 
     let args: Vec<String> = std::env::args().collect();

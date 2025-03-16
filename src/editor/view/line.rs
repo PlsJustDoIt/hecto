@@ -32,17 +32,21 @@ struct TextFragment {
 }
 
 impl Line {
+
+    /// instancie une Line à partir d'une string brute
     pub fn from(line_str: &str) -> Self {
         let fragments = Self::str_to_fragments(line_str);
             Self { fragments }
     }
 
+    /// concat une ligne à une autre
     pub fn append(&mut self, other: &Self) {
         let mut concat = self.to_string();
         concat.push_str(&other.to_string());
         self.fragments = Self::str_to_fragments(&concat);
     }
 
+    /// permet de convertir une string en un vecteur de TextFragment, avec les graphèmes etc
     fn str_to_fragments(line_str: &str) -> Vec<TextFragment> {
         line_str
             .graphemes(true)
@@ -69,6 +73,7 @@ impl Line {
             .collect()
     }
 
+    /// permet d'insérer un charactère dans une ligne
     pub fn insert_char(&mut self, character: char, at: usize) {
         let mut result = String::new();
 
@@ -84,7 +89,7 @@ impl Line {
         self.fragments = Self::str_to_fragments(&result);
     }
 
-
+    /// cas où un char n'est pas supporté
     fn replacement_character(for_str: &str) -> Option<char> {
         let width = for_str.width();
         match for_str {
@@ -104,6 +109,7 @@ impl Line {
         }
     }
 
+    /// convertit les graphemes bizarres en grapèmes ok
     pub fn get_visible_graphemes(&self, range: Range<usize>) -> String {
         if range.start >= range.end {
             return String::new();
@@ -130,10 +136,12 @@ impl Line {
         result
     }
 
+    /// compte les graphèmes
     pub fn grapheme_count(&self) -> usize {
         self.fragments.len()
     }
 
+    /// je suis pas sur mais il me semble que c'est pour split une ligne si jamais la taille dépasse ?
     pub fn split(&mut self, at: usize) -> Self {
         if at > self.fragments.len() {
             return Self::default();
@@ -144,6 +152,7 @@ impl Line {
         }
     }
 
+    /// calcule la largeur dispo
     pub fn width_until(&self, grapheme_index: usize) -> usize {
         self.fragments
             .iter()
@@ -155,6 +164,7 @@ impl Line {
             .sum()
     }
 
+    /// supprime une ligne j'imagine
     pub fn delete(&mut self, at: usize) {
         let mut result = String::new();
 
@@ -168,6 +178,7 @@ impl Line {
     
 }
 
+// trait display pour une Line (permet de print une Line facilement)
 impl fmt::Display for Line {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         let result: String = self

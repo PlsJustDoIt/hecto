@@ -44,7 +44,7 @@ pub struct Editor {
 }
 
 impl Editor {
-
+    /// Crée un nouvel éditeur
     pub fn new() -> Result<Self,Error> {
         let current_hook = take_hook();
         set_hook(Box::new(move | panic_info | { // closure
@@ -66,7 +66,7 @@ impl Editor {
         Ok(editor)
     }
 
-
+    /// Redimensionne l'éditeur
     fn resize(&mut self, size: Size) {
         self.terminal_size = size;
         self.view.resize(Size {
@@ -83,7 +83,7 @@ impl Editor {
         });
     }
 
-
+    /// Rafraîchit le status
     pub fn refresh_status(&mut self) {
         let status = self.view.get_status();
         let title = format!("{} - {NAME}", status.file_name);
@@ -94,7 +94,7 @@ impl Editor {
         }
     }
 
-
+    /// Exécute l'éditeur
     pub fn run(&mut self) {
         loop {
             self.refresh_screen();
@@ -114,7 +114,7 @@ impl Editor {
         }
     }
 
-
+    /// Évalue un événement (touche pressée ou redimensionnement)
     #[allow(clippy::needless_pass_by_value)]
     fn evaluate_event(&mut self, event: Event) {
         let should_process = match &event {
@@ -130,7 +130,8 @@ impl Editor {
             }
         }
     }
-
+    
+    /// Rafraîchit l'écran
     fn refresh_screen(&mut self) {
         if self.terminal_size.height == 0 || self.terminal_size.width == 0 {
             return;
@@ -150,6 +151,7 @@ impl Editor {
         let _ = Terminal::execute();
     }
 
+    /// Traite une commande
     fn process_command(&mut self, command: Command) {
         match command {
             System(Quit) => self.handle_quit(),
@@ -166,28 +168,31 @@ impl Editor {
 
         
     }
+    /// Gère la commande de quitter
+    // clippy::arithmetic_side_effects: quit_times is guaranteed to be between 0 and QUIT_TIMES
+    #[allow(clippy::arithmetic_side_effects)]
+    fn handle_quit(&mut self) {
+        if !self.view.get_status().is_modified || self.quit_times + 1 == QUIT_TIMES {
+            self.should_quit = true;
+        } else if self.view.get_status().is_modified {
+            self.message_bar.update_message(&format!(
+                "WARNING! File has unsaved changes. Press Ctrl-Q {} more times to quit.",
+                QUIT_TIMES - self.quit_times - 1
+            ));
 
-      // clippy::arithmetic_side_effects: quit_times is guaranteed to be between 0 and QUIT_TIMES
-      #[allow(clippy::arithmetic_side_effects)]
-      fn handle_quit(&mut self) {
-          if !self.view.get_status().is_modified || self.quit_times + 1 == QUIT_TIMES {
-              self.should_quit = true;
-          } else if self.view.get_status().is_modified {
-              self.message_bar.update_message(&format!(
-                  "WARNING! File has unsaved changes. Press Ctrl-Q {} more times to quit.",
-                  QUIT_TIMES - self.quit_times - 1
-              ));
-  
-              self.quit_times += 1;
-          }
-      }
-      fn reset_quit_times(&mut self) {
-          if self.quit_times > 0 {
-              self.quit_times = 0;
-              self.message_bar.update_message("");
-          }
-      }
+            self.quit_times += 1;
+        }
+    }
 
+    /// Réinitialise le nombre de tentatives de quitter
+    fn reset_quit_times(&mut self) {
+        if self.quit_times > 0 {
+            self.quit_times = 0;
+            self.message_bar.update_message("");
+        }
+    }
+
+    /// affiche le message de sauvegarde
     fn handle_save(&mut self) {
         if self.view.save().is_ok() {
             self.message_bar.update_message("File saved successfully.");

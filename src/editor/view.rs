@@ -35,6 +35,7 @@ pub struct Location {
 
 impl View {
 
+    /// construit le message de bienvenue
     fn build_welcome_message(width: usize) -> String {
         if width == 0 {
             return String::new();
@@ -50,10 +51,12 @@ impl View {
 
     }
 
+    /// affiche une ligne de texte à l'écran
     fn render_line(at:usize, line_text: &str) -> Result<(),Error> {
         Terminal::print_row(at, line_text)
     }
 
+    /// gère les commandes d'édition
     pub fn handle_edit_command(&mut self, command: Edit) {
         match command {
             Edit::Insert(character) => self.insert_char(character),
@@ -63,6 +66,7 @@ impl View {
         }
     }
 
+    /// gère les commandes de déplacement
     pub fn handle_move_command(&mut self, command: Move) {
         let Size { height, .. } = self.size;
         // This match moves the positon, but does not check for all boundaries.
@@ -80,6 +84,7 @@ impl View {
         self.scroll_text_location_into_view();
     }
 
+    /// récupère le status du document
     pub fn get_status(&self) -> DocumentStatus {
         DocumentStatus {
             total_lines: self.buffer.height(),
@@ -89,6 +94,7 @@ impl View {
         }
     }
 
+    /// suppression d'un caractère et retour en arrière
     fn delete_backward(&mut self) {
         if self.text_location.line_index != 0 || self.text_location.grapheme_index != 0 {
             self.handle_move_command(Move::Left);
@@ -96,28 +102,25 @@ impl View {
         }
     }
 
+    /// sauvegarde le document
     pub fn save(&mut self) -> Result<(), Error> {
         self.buffer.save()
     }
 
+    /// insère un retour à la ligne
     fn insert_newline(&mut self) {
         self.buffer.insert_newline(self.text_location);
         self.handle_move_command(Move::Right);
         self.set_needs_redraw(true);
     }
 
-    fn backspace(&mut self) {
-        if self.text_location.line_index != 0 || self.text_location.grapheme_index != 0 {
-            self.handle_move_command(Move::Left);
-            self.delete();
-        }
-    }
-
+    /// supprime un caractère
     fn delete(&mut self) {
         self.buffer.delete(self.text_location);
         self.set_needs_redraw(true);
     }
 
+    /// insère un caractère
     fn insert_char(&mut self, character: char) {
         let old_len = self
             .buffer
@@ -137,6 +140,7 @@ impl View {
         self.set_needs_redraw(true);
     }
 
+    /// affiche à l'écran le contenu d'un fichier
     pub fn load(&mut self, file_name: &str) -> Result<(), Error> {
         let buffer = Buffer::load(file_name)?;
         self.buffer = buffer;
@@ -144,6 +148,7 @@ impl View {
         Ok(())
     }
 
+    /// déplace le curseur verticalement
     fn scroll_vertically(&mut self, to: usize) {
         let Size { height, .. } = self.size;
         let offset_changed = if to < self.scroll_offset.y {
@@ -159,6 +164,8 @@ impl View {
             self.set_needs_redraw(true);
         }
     }
+
+    /// déplace le curseur horizontalement
     fn scroll_horizontally(&mut self, to: usize) {
         let Size { width, .. } = self.size;
         let offset_changed = if to < self.scroll_offset.x {
@@ -184,11 +191,13 @@ impl View {
 
     // region: Location and Position Handling
 
+    /// Returns the current caret position in the view.
     pub fn caret_position(&self) -> Position {
         self.text_location_to_position()
             .saturating_sub(self.scroll_offset)
     }
 
+    /// Returns the current text location in the view.
     fn text_location_to_position(&self) -> Position {
         let row = self.text_location.line_index;
         let col = self.buffer.lines.get(row).map_or(0, |line| {
