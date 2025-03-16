@@ -1,17 +1,13 @@
 
 mod buffer;
 use buffer::Buffer;
-use line::Line;
 use super::{
     command::{Edit, Move},
-    terminal::{Position, Size, Terminal},
-    DocumentStatus, NAME, VERSION,
-    UIComponent,
+    DocumentStatus, Line, Position, Size, Terminal, UIComponent, NAME, VERSION,
 };
-mod line;
 use std::{cmp::min, io::Error};
-
-
+mod fileinfo;
+use fileinfo::FileInfo;
 
 
 
@@ -146,6 +142,14 @@ impl View {
         self.buffer = buffer;
         self.set_needs_redraw(true);
         Ok(())
+    }
+
+    pub const fn is_file_loaded(&self) -> bool {
+        self.buffer.is_file_loaded()
+    }
+
+    pub fn save_as(&mut self, file_name: &str) -> Result<(), Error> {
+        self.buffer.save_as(file_name)
     }
 
     /// déplace le curseur verticalement

@@ -141,6 +141,14 @@ impl Line {
         self.fragments.len()
     }
 
+    pub fn width(&self) -> usize {
+        self.width_until(self.grapheme_count())
+    }
+
+    pub fn append_char(&mut self, character: char) {
+        self.insert_char(character, self.grapheme_count());
+    }
+
     /// je suis pas sur mais il me semble que c'est pour split une ligne si jamais la taille dépasse ?
     pub fn split(&mut self, at: usize) -> Self {
         if at > self.fragments.len() {
@@ -150,6 +158,10 @@ impl Line {
         Self {
             fragments: remainder,
         }
+    }
+
+    pub fn delete_last(&mut self) {
+        self.delete(self.grapheme_count().saturating_sub(1));
     }
 
     /// calcule la largeur dispo

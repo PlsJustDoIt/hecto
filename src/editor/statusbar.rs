@@ -1,9 +1,4 @@
-use super::{
-    terminal::{Size, Terminal},
-    DocumentStatus,
-    UIComponent
-    
-};
+use super::{DocumentStatus, Size, Terminal, UIComponent};
 use std::io::Error;
 
 /// Status bar component

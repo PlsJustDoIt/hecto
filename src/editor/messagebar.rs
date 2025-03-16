@@ -6,10 +6,7 @@ use std::{
 
 const DEFAULT_DURATION: Duration = Duration::new(5, 0);
 
-use super::{
-    terminal::{Size, Terminal},
-    UIComponent
-};
+use super::{Size, Terminal, UIComponent};
 
 /// message affichée en bas de l'écran
 struct Message {
